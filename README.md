@@ -71,16 +71,18 @@ The reference FASTA must contain exactly one sequence.
 ## 4. Run the pipeline
 
 ```bash
-bash run_clone_consensus.sh input.csv HXB2.fasta
+bash run_clone_consensus.sh input.csv HXB2.fasta my_output
 ```
 
-To use a different results folder:
+The third argument is the analysis output folder. The pipeline creates two subfolders inside it:
 
-```bash
-bash run_clone_consensus.sh input.csv HXB2.fasta my_results
+```text
+my_output/
+├── work/
+└── results/
 ```
 
-Intermediate and QC files are written to `work/`.
+`work/` contains intermediate and QC files. `results/` contains the final combined outputs.
 
 ## 5. Consensus method
 
@@ -96,14 +98,14 @@ STRAND = minus  -> reverse-complement HIV_SEQ
 The normalized sequences are saved in:
 
 ```text
-work/normalized_sequences.csv
+OUTPUT_DIR/work/normalized_sequences.csv
 ```
 
 ### B. Group fragments into clones
 
 Fragments are grouped by `participant_id + clone_id`.
 
-Each clone receives an internal work identifier such as `clone_000001`. The mapping between this internal identifier and the original participant/clone IDs is retained in `work/clone_manifest.csv`.
+Each clone receives an internal work identifier such as `clone_000001`. The mapping between this internal identifier and the original participant/clone IDs is retained in `OUTPUT_DIR/work/clone_manifest.csv`.
 
 ### C. Reference-scaffolded fragment alignment
 
@@ -142,27 +144,27 @@ This remapping is **QC only**. The pipeline reports identity, fragment coverage,
 ## 6. Generated folders
 
 ```text
-work/
-├── normalized_sequences.csv
-├── clone_manifest.csv
-├── reference.fasta
-└── clones/
-    └── clone_000001/
-        ├── clone_info.json
-        ├── fragments.fasta
-        ├── alignment.fasta
-        ├── consensus.fasta
-        ├── consensus_stats.json
-        ├── depth.csv
-        └── fragments_vs_consensus.paf
-
-results/
-├── clone_consensus.fasta
-├── clone_consensus_summary.csv
-└── fragment_qc.csv
+OUTPUT_DIR/
+├── work/
+│   ├── normalized_sequences.csv
+│   ├── clone_manifest.csv
+│   ├── reference.fasta
+│   └── clones/
+│       └── clone_000001/
+│           ├── clone_info.json
+│           ├── fragments.fasta
+│           ├── alignment.fasta
+│           ├── consensus.fasta
+│           ├── consensus_stats.json
+│           ├── depth.csv
+│           └── fragments_vs_consensus.paf
+└── results/
+    ├── clone_consensus.fasta
+    ├── clone_consensus_summary.csv
+    └── fragment_qc.csv
 ```
 
-`work/` contains intermediate and audit/QC files. `results/` contains only the three combined outputs intended for downstream use.
+`OUTPUT_DIR/work/` contains intermediate and audit/QC files. `OUTPUT_DIR/results/` contains only the three combined outputs intended for downstream use.
 
 ## 7. Main outputs
 
@@ -220,7 +222,7 @@ One row per input fragment, including:
 Run:
 
 ```bash
-bash run_clone_consensus.sh example_data/input.csv example_data/reference.fasta
+bash run_clone_consensus.sh example_data/input.csv example_data/reference.fasta example_output
 ```
 
 The example data are synthetic and are not intended for biological interpretation.
