@@ -2,3 +2,4 @@ __pycache__/
 *.pyc
 work/
 results/
+clone_consensus_output/
