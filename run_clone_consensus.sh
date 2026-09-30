@@ -6,12 +6,14 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 usage() {
     cat <<'TXT'
 Usage:
-  bash run_clone_consensus.sh INPUT_CSV REFERENCE_FASTA OUTPUT_DIR
+  bash run_clone_consensus.sh INPUT_CSV REFERENCE_FASTA [OUTPUT_DIR]
 
 Arguments:
   INPUT_CSV        CSV containing participant_id, sample_id, read, clone_id, STRAND, HIV_SEQ
   REFERENCE_FASTA  One full-length HIV reference sequence used only as an alignment scaffold
-  OUTPUT_DIR       Analysis output folder; work/ and results/ are created inside it
+  OUTPUT_DIR       Optional analysis output folder (default: clone_consensus_output)
+
+The pipeline creates work/ and results/ inside OUTPUT_DIR.
 TXT
 }
 
@@ -20,14 +22,14 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     exit 0
 fi
 
-if (( $# != 3 )); then
+if (( $# < 2 || $# > 3 )); then
     usage >&2
     exit 1
 fi
 
 INPUT_CSV="$1"
 REFERENCE_FASTA="$2"
-OUTPUT_DIR="$3"
+OUTPUT_DIR="${3:-clone_consensus_output}"
 WORK_DIR="$OUTPUT_DIR/work"
 RESULTS_DIR="$OUTPUT_DIR/results"
 
@@ -72,17 +74,15 @@ echo "2. Align fragments, call clone consensuses, and remap fragments for QC"
 for clone_dir in "$WORK_DIR"/clones/clone_*; do
     echo "  $(basename "$clone_dir")"
 
-    # The reference is only an alignment scaffold. --keeplength is deliberately
-    # not used, so insertions present in clone fragments are retained.
+    # The reference only places fragments. It never contributes consensus bases.
+    # --keeplength is not used, so supported insertions can be retained.
     mafft --quiet --addfragments "$clone_dir/fragments.fasta" "$WORK_DIR/reference.fasta" \
         > "$clone_dir/alignment.fasta"
 
-    # Consensus bases are called only from clone fragments; the REFERENCE row
-    # never contributes bases to the consensus.
     python3 "$SCRIPT_DIR/clone_consensus.py" consensus \
         --alignment "$clone_dir/alignment.fasta"
 
-    # Remapping is QC only. No fragment is automatically removed here.
+    # Remapping is QC only; fragments are not automatically excluded.
     minimap2 -x map-hifi -c --cs=long --secondary=no \
         "$clone_dir/consensus.fasta" "$clone_dir/fragments.fasta" \
         > "$clone_dir/fragments_vs_consensus.paf"
