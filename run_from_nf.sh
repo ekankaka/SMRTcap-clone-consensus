@@ -31,30 +31,14 @@ fi
 
 FINAL_RESULTS_DIR="$1"
 REFERENCE_FASTA="$2"
-SAMPLE_MAP="${3:-}"
-[[ "$SAMPLE_MAP" == "-" ]] && SAMPLE_MAP=""
+SAMPLE_MAP="${3:--}"
 OUTPUT_DIR="${4:-clone_consensus_output}"
-WORK_DIR="$OUTPUT_DIR/work"
-INPUT_CSV="$WORK_DIR/nf_clone_input.csv"
-
-[[ -d "$FINAL_RESULTS_DIR" ]] || { echo "Missing final-results folder: $FINAL_RESULTS_DIR" >&2; exit 1; }
-[[ -s "$REFERENCE_FASTA" ]] || { echo "Missing reference FASTA: $REFERENCE_FASTA" >&2; exit 1; }
-if [[ -n "$SAMPLE_MAP" && ! -s "$SAMPLE_MAP" ]]; then
-    echo "Missing sample mapping CSV: $SAMPLE_MAP" >&2
-    exit 1
-fi
-
-mkdir -p "$WORK_DIR"
+INPUT_CSV="$OUTPUT_DIR/work/nf_clone_input.csv"
 
 echo "Preparing clone input from nf-viral-integration output"
-if [[ -n "$SAMPLE_MAP" ]]; then
-    python3 "$SCRIPT_DIR/prepare_nf_input.py" \
-        "$FINAL_RESULTS_DIR" "$INPUT_CSV" \
-        --sample-map "$SAMPLE_MAP"
-else
-    python3 "$SCRIPT_DIR/prepare_nf_input.py" \
-        "$FINAL_RESULTS_DIR" "$INPUT_CSV"
-fi
+python3 "$SCRIPT_DIR/prepare_nf_input.py" \
+    "$FINAL_RESULTS_DIR" "$INPUT_CSV" \
+    --sample-map "$SAMPLE_MAP"
 
 echo ""
 bash "$SCRIPT_DIR/run_clone_consensus.sh" "$INPUT_CSV" "$REFERENCE_FASTA" "$OUTPUT_DIR"
