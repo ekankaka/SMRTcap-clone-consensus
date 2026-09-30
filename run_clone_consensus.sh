@@ -6,14 +6,12 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 usage() {
     cat <<'TXT'
 Usage:
-  bash run_clone_consensus.sh INPUT_CSV REFERENCE_FASTA [RESULTS_DIR]
+  bash run_clone_consensus.sh INPUT_CSV REFERENCE_FASTA OUTPUT_DIR
 
 Arguments:
   INPUT_CSV        CSV containing participant_id, sample_id, read, clone_id, STRAND, HIV_SEQ
   REFERENCE_FASTA  One full-length HIV reference sequence used only as an alignment scaffold
-  RESULTS_DIR      Final results folder (default: results)
-
-Intermediate/QC files are written to work/.
+  OUTPUT_DIR       Analysis output folder; work/ and results/ are created inside it
 TXT
 }
 
@@ -22,15 +20,16 @@ if [[ "${1:-}" == "-h" || "${1:-}" == "--help" ]]; then
     exit 0
 fi
 
-if (( $# < 2 || $# > 3 )); then
+if (( $# != 3 )); then
     usage >&2
     exit 1
 fi
 
 INPUT_CSV="$1"
 REFERENCE_FASTA="$2"
-RESULTS_DIR="${3:-results}"
-WORK_DIR="work"
+OUTPUT_DIR="$3"
+WORK_DIR="$OUTPUT_DIR/work"
+RESULTS_DIR="$OUTPUT_DIR/results"
 
 for command_name in python3 mafft minimap2; do
     command -v "$command_name" >/dev/null 2>&1 || {
@@ -57,6 +56,7 @@ rm -f "$RESULTS_DIR/clone_consensus.fasta" \
 echo "SMRTcap-clone-consensus version $(python3 "$SCRIPT_DIR/clone_consensus.py" version)"
 echo "Input CSV:       $INPUT_CSV"
 echo "Reference FASTA: $REFERENCE_FASTA"
+echo "Output folder:   $OUTPUT_DIR"
 echo "Work folder:     $WORK_DIR"
 echo "Results folder:  $RESULTS_DIR"
 
