@@ -55,12 +55,12 @@ def main():
     )
     parser.add_argument("final_results")
     parser.add_argument("output_csv")
-    parser.add_argument("--sample-map")
+    parser.add_argument("--sample-map", default="-")
     args = parser.parse_args()
 
     final_results = Path(args.final_results)
     output_csv = Path(args.output_csv)
-    sample_map = Path(args.sample_map) if args.sample_map else None
+    sample_map = None if args.sample_map == "-" else Path(args.sample_map)
 
     if not final_results.is_dir():
         raise SystemExit(f"Missing final-results folder: {final_results}")
