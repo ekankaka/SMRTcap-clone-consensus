@@ -33,8 +33,7 @@ FINAL_RESULTS_DIR="$1"
 REFERENCE_FASTA="$2"
 SAMPLE_MAP="${3:--}"
 OUTPUT_DIR="${4:-clone_consensus_output}"
-WORK_DIR="$OUTPUT_DIR/work"
-INPUT_CSV="$WORK_DIR/nf_clone_input.csv"
+INPUT_CSV="$OUTPUT_DIR/work/nf_clone_input.csv"
 
 echo "Preparing clone input from nf-viral-integration output"
 python3 "$SCRIPT_DIR/prepare_nf_input.py" \
