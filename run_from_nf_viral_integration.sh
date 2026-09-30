@@ -6,7 +6,7 @@ SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
 usage() {
     cat <<'TXT'
 Usage:
-  bash run_from_nf.sh FINAL_RESULTS_DIR REFERENCE_FASTA [SAMPLE_MAP_CSV] [OUTPUT_DIR]
+  bash run_from_nf_viral_integration.sh FINAL_RESULTS_DIR REFERENCE_FASTA [SAMPLE_MAP_CSV] [OUTPUT_DIR]
 
 Arguments:
   FINAL_RESULTS_DIR  nf-viral-integration final_results/ folder
@@ -36,7 +36,7 @@ OUTPUT_DIR="${4:-clone_consensus_output}"
 INPUT_CSV="$OUTPUT_DIR/work/nf_clone_input.csv"
 
 echo "Preparing clone input from nf-viral-integration output"
-python3 "$SCRIPT_DIR/prepare_nf_input.py" \
+python3 "$SCRIPT_DIR/prepare_nf_viral_integration_input.py" \
     "$FINAL_RESULTS_DIR" "$INPUT_CSV" \
     --sample-map "$SAMPLE_MAP"
 

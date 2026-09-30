@@ -29,25 +29,25 @@ MAFFT and minimap2 must be available on `PATH`.
 Use the `final_results/` folder produced by `nf-viral-integration`:
 
 ```bash
-bash run_from_nf.sh FINAL_RESULTS_DIR REFERENCE_FASTA [SAMPLE_MAP_CSV] [OUTPUT_DIR]
+bash run_from_nf_viral_integration.sh FINAL_RESULTS_DIR REFERENCE_FASTA [SAMPLE_MAP_CSV] [OUTPUT_DIR]
 ```
 
 Example without a sample mapping file:
 
 ```bash
-bash run_from_nf.sh final_results HXB2.fasta
+bash run_from_nf_viral_integration.sh final_results HXB2.fasta
 ```
 
 Example with several samples belonging to the same participant:
 
 ```bash
-bash run_from_nf.sh final_results HXB2.fasta sample_to_participant.csv
+bash run_from_nf_viral_integration.sh final_results HXB2.fasta sample_to_participant.csv
 ```
 
 Example with a custom output folder but no mapping file:
 
 ```bash
-bash run_from_nf.sh final_results HXB2.fasta - my_clone_consensus
+bash run_from_nf_viral_integration.sh final_results HXB2.fasta - my_clone_consensus
 ```
 
 `OUTPUT_DIR` is optional. The default is:
@@ -282,13 +282,13 @@ The example data are synthetic and are not intended for biological interpretatio
 ## 10. Files in this repository
 
 ```text
-run_from_nf.sh           Recommended runner for nf-viral-integration final_results/
-run_clone_consensus.sh   Core runner for a pre-assigned clone CSV
-prepare_nf_input.py      Adapter from nf-viral-integration final_results/ to the standard input CSV
-clone_consensus.py       Validation, normalization, consensus, and QC logic
-requirements.txt         Python dependency
-example_data/            Synthetic generic-input test data
-LICENSE                  MIT license
+run_from_nf_viral_integration.sh       Recommended runner for nf-viral-integration final_results/
+run_clone_consensus.sh                 Core runner for a pre-assigned clone CSV
+prepare_nf_viral_integration_input.py  Adapter from nf-viral-integration final_results/ to the standard input CSV
+clone_consensus.py                     Validation, normalization, consensus, and QC logic
+requirements.txt                       Python dependency
+example_data/                          Synthetic generic-input test data
+LICENSE                                MIT license
 ```
 
 ## 11. Reproducibility
