@@ -121,6 +121,8 @@ def main():
 
                 clone_id = f"{chromosome}_{integration_site}"
                 unexpected = "".join(sorted(set(hiv_seq) - VALID_DNA))
+
+                # Do not repair or split unusual upstream sequences; exclude and report them.
                 if unexpected:
                     skipped_invalid.append({
                         "participant_id": mapping[sample_id],
