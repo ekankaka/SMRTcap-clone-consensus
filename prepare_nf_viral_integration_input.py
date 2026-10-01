@@ -6,6 +6,7 @@ import re
 from pathlib import Path
 
 REQUIRED_OUTPUT = ["participant_id", "sample_id", "read", "clone_id", "STRAND", "HIV_SEQ"]
+VALID_DNA = set("ACGTNRYSWKMBDHV")
 BAD_ID = re.compile(r"[\s,;|]")
 
 
@@ -82,6 +83,7 @@ def main():
 
     mapping = load_mapping(sample_map, sample_files)
     output_rows = []
+    skipped_invalid = []
     skipped_nonflanked = 0
     skipped_incomplete = 0
 
@@ -106,7 +108,7 @@ def main():
             for row in reader:
                 chromosome = clean(row[chromosome_col])
                 integration_site = clean(row["INTEGRATION_SITE"])
-                hiv_seq = clean(row["HIV_SEQ"])
+                hiv_seq = "".join(clean(row["HIV_SEQ"]).split()).upper()
 
                 # Standard nf-viral-integration output provides a host integration
                 # coordinate only for flanked reads.
@@ -117,19 +119,38 @@ def main():
                     skipped_incomplete += 1
                     continue
 
+                clone_id = f"{chromosome}_{integration_site}"
+                unexpected = "".join(sorted(set(hiv_seq) - VALID_DNA))
+                if unexpected:
+                    skipped_invalid.append({
+                        "participant_id": mapping[sample_id],
+                        "sample_id": sample_id,
+                        "read": clean(row["READ"]),
+                        "clone_id": clone_id,
+                        "unexpected_characters": unexpected,
+                    })
+                    continue
+
                 output_rows.append({
                     "participant_id": mapping[sample_id],
                     "sample_id": sample_id,
                     "read": clean(row["READ"]),
-                    "clone_id": f"{chromosome}_{integration_site}",
+                    "clone_id": clone_id,
                     "STRAND": clean(row["STRAND"]).lower(),
                     "HIV_SEQ": hiv_seq,
                 })
 
-    if not output_rows:
-        raise ValueError("No flanked HIV fragments with clone assignments were found")
-
     output_csv.parent.mkdir(parents=True, exist_ok=True)
+    skipped_csv = output_csv.parent / "skipped_invalid_sequences.csv"
+    skipped_fields = ["participant_id", "sample_id", "read", "clone_id", "unexpected_characters"]
+    with open(skipped_csv, "w", newline="") as handle:
+        writer = csv.DictWriter(handle, fieldnames=skipped_fields)
+        writer.writeheader()
+        writer.writerows(skipped_invalid)
+
+    if not output_rows:
+        raise ValueError("No valid flanked HIV fragments with clone assignments were found")
+
     with open(output_csv, "w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=REQUIRED_OUTPUT)
         writer.writeheader()
@@ -137,8 +158,10 @@ def main():
 
     print(f"Prepared {len(output_rows)} flanked fragments from {len(sample_files)} samples")
     print(f"Skipped non-flanked fragments: {skipped_nonflanked}")
+    print(f"Skipped sequences with unexpected characters: {len(skipped_invalid)}")
     if skipped_incomplete:
         print(f"Skipped incomplete flanked rows: {skipped_incomplete}")
+    print(f"Skipped-sequence summary: {skipped_csv}")
     print(f"Clone-consensus input: {output_csv}")
 
 
