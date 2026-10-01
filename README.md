@@ -103,6 +103,14 @@ It then extracts `READ`, `STRAND`, and `HIV_SEQ` and creates the standard clone-
 OUTPUT_DIR/work/nf_clone_input.csv
 ```
 
+For direct nf input, a flanked `HIV_SEQ` containing characters outside the accepted DNA/IUPAC set `ACGTNRYSWKMBDHV` is skipped rather than altered. Skipped sequences are reported in:
+
+```text
+OUTPUT_DIR/work/skipped_invalid_sequences.csv
+```
+
+The summary contains `participant_id`, `sample_id`, `read`, `clone_id`, and the unexpected character(s).
+
 Non-flanked reads are not included automatically in this mode because standard `nf-viral-integration` output does not provide a host integration-site clone assignment for them.
 
 ## 3. Generic pre-assigned CSV mode
@@ -218,7 +226,8 @@ This is QC only. The pipeline reports mapping identity and fragment coverage but
 ```text
 OUTPUT_DIR/
 ├── work/
-│   ├── nf_clone_input.csv          # direct nf mode only
+│   ├── nf_clone_input.csv                 # direct nf mode only
+│   ├── skipped_invalid_sequences.csv      # direct nf mode only
 │   ├── normalized_sequences.csv
 │   ├── clone_manifest.csv
 │   ├── reference.fasta
@@ -264,10 +273,15 @@ One row per clone with fragment/sample counts, consensus length, percentage `N`,
 
 One row per input fragment with fragment length, mapping status, mapping strand, alignment length, percent identity, percent fragment coverage, and MAPQ.
 
+### `skipped_invalid_sequences.csv`
+
+Direct nf mode only. One row per otherwise eligible flanked sequence skipped because `HIV_SEQ` contains an unexpected character. The sequence is not altered or used for consensus generation.
+
 ## 8. Important interpretation points
 
 - Clone membership is accepted as given; the consensus pipeline does not infer integration sites.
 - Direct `nf-viral-integration` mode derives clone membership only for host-flanked reads.
+- Direct nf sequences with unexpected characters are skipped and reported rather than modified.
 - The generic CSV mode is the route to include non-flanked reads that have already been assigned to a clone.
 - The HIV reference guides alignment only and never supplies consensus bases.
 - Internal regions without fragment coverage remain `N`.
