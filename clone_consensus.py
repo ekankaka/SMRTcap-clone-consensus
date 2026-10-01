@@ -191,6 +191,15 @@ def consensus(args):
     consensus_id = f"{info['participant_id']}|{info['clone_id']}|n={info['n_fragments']}"
     SeqIO.write([SeqRecord(Seq(sequence), id=consensus_id, description="")], folder / "consensus.fasta", "fasta")
 
+    # QC alignment: consensus first, followed by the aligned clone fragments.
+    # The scaffold reference is deliberately excluded.
+    aligned_records = [
+        SeqRecord(Seq("".join(calls[first:last + 1])), id=f"CONSENSUS|{consensus_id}", description="")
+    ] + [
+        SeqRecord(Seq(str(r.seq)[first:last + 1]), id=r.id, description="") for r in fragments
+    ]
+    SeqIO.write(aligned_records, folder / "alignment_with_consensus.fasta", "fasta")
+
     positive_depth = [d for d in depths[first:last + 1] if d > 0]
     stats = {
         **info,

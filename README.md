@@ -205,6 +205,8 @@ Leading and trailing positions with no fragment coverage are removed.
 
 A clone with one fragment is still reported, but it is labelled `single_fragment` rather than `multi_fragment`.
 
+For visual QC, each clone also gets `alignment_with_consensus.fasta`. This file contains the aligned consensus as the first sequence followed by all aligned clone fragments. The scaffold reference is excluded, and the file is trimmed to the observed clone span.
+
 ### E. Fragment-to-consensus QC
 
 Each forward-normalized fragment is remapped to its clone consensus with minimap2 `map-hifi`.
@@ -225,6 +227,7 @@ OUTPUT_DIR/
 │           ├── clone_info.json
 │           ├── fragments.fasta
 │           ├── alignment.fasta
+│           ├── alignment_with_consensus.fasta
 │           ├── consensus.fasta
 │           ├── consensus_stats.json
 │           ├── depth.csv
@@ -248,6 +251,10 @@ Headers use:
 ```text
 >participant_id|clone_id|n=<number_of_fragments>
 ```
+
+### `alignment_with_consensus.fasta`
+
+One per clone in `work/clones/clone_*/`. The aligned consensus is the first sequence, followed by the aligned clone fragments. The reference scaffold is not included.
 
 ### `clone_consensus_summary.csv`
 
