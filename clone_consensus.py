@@ -108,13 +108,13 @@ def prepare(args):
         writer.writerows(normalized_rows)
 
     manifest = []
-    for i, ((pid, cid), items) in enumerate(sorted(clones.items()), start=1):
-        key = f"clone_{i:06d}"
+    for (pid, cid), items in sorted(clones.items()):
+        key = f"{pid}_{cid}"
         folder = clones_dir / key
         folder.mkdir(parents=True, exist_ok=True)
         SeqIO.write([
             SeqRecord(Seq(x["HIV_SEQ_FORWARD"]), id=x["sequence_id"], description="") for x in items
-        ], folder / "fragments.fasta", "fasta")
+        ], folder / f"{key}_fragments.fasta", "fasta")
 
         sample_ids = sorted({x["sample_id"] for x in items})
         lengths = [len(x["HIV_SEQ_FORWARD"]) for x in items]
@@ -123,7 +123,7 @@ def prepare(args):
             "n_fragments": len(items), "n_samples": len(sample_ids), "sample_ids": sample_ids,
             "shortest_fragment_nt": min(lengths), "longest_fragment_nt": max(lengths),
         }
-        with open(folder / "clone_info.json", "w") as handle:
+        with open(folder / f"{key}_clone_info.json", "w") as handle:
             json.dump(info, handle, indent=2)
         manifest.append({**info, "sample_ids": ";".join(sample_ids)})
 
@@ -147,6 +147,7 @@ def interval(seq):
 def consensus(args):
     alignment = Path(args.alignment)
     folder = alignment.parent
+    key = folder.name
     records = list(SeqIO.parse(alignment, "fasta"))
     refs = [r for r in records if r.id == "REFERENCE"]
     fragments = [r for r in records if r.id != "REFERENCE"]
@@ -186,10 +187,10 @@ def consensus(args):
     if not sequence:
         raise ValueError("Consensus sequence is empty")
 
-    with open(folder / "clone_info.json") as handle:
+    with open(folder / f"{key}_clone_info.json") as handle:
         info = json.load(handle)
     consensus_id = f"{info['participant_id']}|{info['clone_id']}|n={info['n_fragments']}"
-    SeqIO.write([SeqRecord(Seq(sequence), id=consensus_id, description="")], folder / "consensus.fasta", "fasta")
+    SeqIO.write([SeqRecord(Seq(sequence), id=consensus_id, description="")], folder / f"{key}_consensus.fasta", "fasta")
 
     # QC alignment: consensus first, followed by the aligned clone fragments.
     # The scaffold reference is deliberately excluded.
@@ -198,7 +199,7 @@ def consensus(args):
     ] + [
         SeqRecord(Seq(str(r.seq)[first:last + 1]), id=r.id, description="") for r in fragments
     ]
-    SeqIO.write(aligned_records, folder / "alignment_with_consensus.fasta", "fasta")
+    SeqIO.write(aligned_records, folder / f"{key}_alignment_with_consensus.fasta", "fasta")
 
     positive_depth = [d for d in depths[first:last + 1] if d > 0]
     stats = {
@@ -214,14 +215,14 @@ def consensus(args):
         "max_depth": max(positive_depth),
         "disagreement_positions": disagreements,
     }
-    with open(folder / "consensus_stats.json", "w") as handle:
+    with open(folder / f"{key}_consensus_stats.json", "w") as handle:
         json.dump(stats, handle, indent=2)
 
     reference = str(refs[0].seq).upper()
     ref_pos = sum(1 for b in reference[:first] if b != "-")
     cons_pos = 0
     depth_fields = ["alignment_column", "reference_position", "consensus_position", "depth", "consensus_call"]
-    with open(folder / "depth.csv", "w", newline="") as handle:
+    with open(folder / f"{key}_depth.csv", "w", newline="") as handle:
         writer = csv.DictWriter(handle, fieldnames=depth_fields)
         writer.writeheader()
         for col in range(first, last + 1):
@@ -270,16 +271,17 @@ def finalize(args):
     with open(work / "normalized_sequences.csv", newline="") as handle:
         normalized = list(csv.DictReader(handle))
 
-    clone_dirs = sorted((work / "clones").glob("clone_*"))
+    clone_dirs = sorted(folder for folder in (work / "clones").iterdir() if folder.is_dir())
     if not clone_dirs:
         raise ValueError("No clone work folders found")
 
     consensus_records, summaries, hits = [], [], {}
     for folder in clone_dirs:
-        consensus_records.extend(SeqIO.parse(folder / "consensus.fasta", "fasta"))
-        with open(folder / "consensus_stats.json") as handle:
+        key = folder.name
+        consensus_records.extend(SeqIO.parse(folder / f"{key}_consensus.fasta", "fasta"))
+        with open(folder / f"{key}_consensus_stats.json") as handle:
             summaries.append(json.load(handle))
-        hits.update(best_paf(folder / "fragments_vs_consensus.paf"))
+        hits.update(best_paf(folder / f"{key}_fragments_vs_consensus.paf"))
     SeqIO.write(consensus_records, results / "clone_consensus.fasta", "fasta")
 
     fragment_rows = []

@@ -183,7 +183,7 @@ Fragments are grouped by:
 participant_id + clone_id
 ```
 
-Each clone receives a simple internal work identifier such as `clone_000001`. The mapping is stored in `clone_manifest.csv`.
+Each clone work folder is named directly from its biological identifiers as `<participant_id>_<clone_id>`, for example `115_chr17_50219646`. The same name is stored as `clone_key` in `clone_manifest.csv`.
 
 ### C. Reference-scaffolded alignment
 
@@ -232,15 +232,15 @@ OUTPUT_DIR/
 │   ├── clone_manifest.csv
 │   ├── reference.fasta
 │   └── clones/
-│       └── clone_000001/
-│           ├── clone_info.json
-│           ├── fragments.fasta
-│           ├── alignment.fasta
-│           ├── alignment_with_consensus.fasta
-│           ├── consensus.fasta
-│           ├── consensus_stats.json
-│           ├── depth.csv
-│           └── fragments_vs_consensus.paf
+│       └── 115_chr17_50219646/
+│           ├── 115_chr17_50219646_clone_info.json
+│           ├── 115_chr17_50219646_fragments.fasta
+│           ├── 115_chr17_50219646_alignment.fasta
+│           ├── 115_chr17_50219646_alignment_with_consensus.fasta
+│           ├── 115_chr17_50219646_consensus.fasta
+│           ├── 115_chr17_50219646_consensus_stats.json
+│           ├── 115_chr17_50219646_depth.csv
+│           └── 115_chr17_50219646_fragments_vs_consensus.paf
 └── results/
     ├── clone_consensus.fasta
     ├── clone_consensus_summary.csv
@@ -263,7 +263,7 @@ Headers use:
 
 ### `alignment_with_consensus.fasta`
 
-One per clone in `work/clones/clone_*/`. The aligned consensus is the first sequence, followed by the aligned clone fragments. The reference scaffold is not included.
+One per clone in `work/clones/<participant_id>_<clone_id>/`, with the same clone prefix at the start of the filename. The aligned consensus is the first sequence, followed by the aligned clone fragments. The reference scaffold is not included.
 
 ### `clone_consensus_summary.csv`
 
