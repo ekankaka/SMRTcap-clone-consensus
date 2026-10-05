@@ -71,21 +71,22 @@ python3 "$SCRIPT_DIR/clone_consensus.py" prepare \
 
 echo ""
 echo "2. Align fragments, call clone consensuses, and remap fragments for QC"
-for clone_dir in "$WORK_DIR"/clones/clone_*; do
-    echo "  $(basename "$clone_dir")"
+for clone_dir in "$WORK_DIR"/clones/*; do
+    clone_name="$(basename "$clone_dir")"
+    echo "  $clone_name"
 
     # The reference only places fragments. It never contributes consensus bases.
     # --keeplength is not used, so supported insertions can be retained.
-    mafft --quiet --addfragments "$clone_dir/fragments.fasta" "$WORK_DIR/reference.fasta" \
-        > "$clone_dir/alignment.fasta"
+    mafft --quiet --addfragments "$clone_dir/${clone_name}_fragments.fasta" "$WORK_DIR/reference.fasta" \
+        > "$clone_dir/${clone_name}_alignment.fasta"
 
     python3 "$SCRIPT_DIR/clone_consensus.py" consensus \
-        --alignment "$clone_dir/alignment.fasta"
+        --alignment "$clone_dir/${clone_name}_alignment.fasta"
 
     # Remapping is QC only; fragments are not automatically excluded.
     minimap2 -x map-hifi -c --cs=long --secondary=no \
-        "$clone_dir/consensus.fasta" "$clone_dir/fragments.fasta" \
-        > "$clone_dir/fragments_vs_consensus.paf"
+        "$clone_dir/${clone_name}_consensus.fasta" "$clone_dir/${clone_name}_fragments.fasta" \
+        > "$clone_dir/${clone_name}_fragments_vs_consensus.paf"
 done
 
 echo ""
